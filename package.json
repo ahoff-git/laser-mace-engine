@@ -7,9 +7,17 @@
     "example": "examples",
     "lib": "lib"
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+"scripts": {
+  "build": "tsup lib/engine/index.ts --format esm,cjs --dts",
+  "dev": "tsup lib/engine/index.ts --format esm,cjs --dts --watch",
+  "clean": "rm -rf dist",
+  "lint": "eslint lib/**/*.ts",
+  "typecheck": "tsc --noEmit",
+  "prepublishOnly": "npm run lint && npm run typecheck && npm run build",
+  "release": "npm version patch && npm publish",
+  "release:minor": "npm version minor && npm publish",
+  "release:major": "npm version major && npm publish"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
