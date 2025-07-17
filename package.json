@@ -4,7 +4,6 @@
   "description": "",
   "main": "index.js",
   "directories": {
-    "example": "examples",
     "lib": "lib"
   },
 "scripts": {
