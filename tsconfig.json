@@ -16,5 +16,5 @@
     }
   },
   "include": ["lib/**/*"],
-  "exclude": ["node_modules", "dist", "examples"]
+  "exclude": ["node_modules", "dist"]
 }
