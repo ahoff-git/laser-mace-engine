@@ -6,4 +6,5 @@ export * from "./components/Collider";
 export * from "./systems/MoveSystem";
 export * from "./systems/RenderSystem";
 export * from "./systems/PhysicsSystem";
+export * from "./systems/BoundarySystem";
 export * from "./utils/RapierSync";

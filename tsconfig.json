@@ -13,7 +13,8 @@
     "baseUrl": ".",
     "paths": {
       "three": ["lib/shims/three"],
-      "@dimforge/rapier3d-compat": ["lib/shims/rapier3d-compat"]
+      "@dimforge/rapier3d-compat": ["lib/shims/rapier3d-compat"],
+      "ecsy": ["lib/shims/ecsy"]
     }
   },
   "include": ["lib/**/*"],
