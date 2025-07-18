@@ -16,4 +16,5 @@ export declare class PhysicsSystem extends System {
     init(attributes?: PhysicsSystemConfig): Promise<void>;
     execute(_delta: number): void;
     stop(): void;
+    private handleCollisions;
 }
