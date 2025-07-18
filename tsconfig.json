@@ -12,7 +12,8 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "three": ["lib/shims/three"]
+      "three": ["lib/shims/three"],
+      "@dimforge/rapier3d-compat": ["lib/shims/rapier3d-compat"]
     }
   },
   "include": ["lib/**/*"],
