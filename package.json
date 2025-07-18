@@ -2,13 +2,14 @@
   "name": "laser-mace-engine",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/engine/index.js",
+  "types": "dist/engine/index.d.ts",
   "directories": {
     "lib": "lib"
   },
 "scripts": {
-  "build": "tsup lib/engine/index.ts --format esm,cjs --dts",
-  "dev": "tsup lib/engine/index.ts --format esm,cjs --dts --watch",
+  "build": "tsc",
+  "dev": "tsc -w",
   "clean": "rm -rf dist",
   "lint": "eslint lib/**/*.ts",
   "typecheck": "tsc --noEmit",
