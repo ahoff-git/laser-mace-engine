@@ -2,6 +2,7 @@ import { System } from "ecsy";
 import RAPIER from "@dimforge/rapier3d-compat";
 import { Position } from "../components/Position";
 import { Velocity } from "../components/Velocity";
+import { Collider } from "../components/Collider";
 import { DefaultRapierSync } from "../utils/RapierSync";
 export class PhysicsSystem extends System {
     constructor() {
@@ -42,9 +43,34 @@ export class PhysicsSystem extends System {
                 this.syncer.fromRapier(entity, body);
             }
         });
+        this.handleCollisions();
     }
     stop() {
         this.bodies.clear();
+    }
+    handleCollisions() {
+        const world = this.world;
+        const colliders = this.queries.colliders?.results ?? [];
+        for (let i = 0; i < colliders.length; i++) {
+            for (let j = i + 1; j < colliders.length; j++) {
+                const a = colliders[i];
+                const b = colliders[j];
+                const posA = a.getComponent(Position);
+                const posB = b.getComponent(Position);
+                const colA = a.getComponent(Collider);
+                const colB = b.getComponent(Collider);
+                const dx = posA.x - posB.x;
+                const dy = posA.y - posB.y;
+                const dz = posA.z - posB.z;
+                const distSq = dx * dx + dy * dy + dz * dz;
+                const rad = colA.radius + colB.radius;
+                if (distSq <= rad * rad) {
+                    if (world && world.commandQueue && world.commandQueue.enqueue) {
+                        world.commandQueue.enqueue({ type: "collision", a, b });
+                    }
+                }
+            }
+        }
     }
 }
 PhysicsSystem.queries = {
@@ -53,5 +79,8 @@ PhysicsSystem.queries = {
         listen: {
             added: true,
         },
+    },
+    colliders: {
+        components: [Position, Collider],
     },
 };
