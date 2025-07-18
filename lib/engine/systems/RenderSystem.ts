@@ -24,7 +24,7 @@ export class RenderSystem extends System {
   }
 
   execute(): void {
-    this.queries.renderables.results.forEach((entity) => {
+    this.queries.renderables.results.forEach((entity: any) => {
       const pos = entity.getComponent(Position)!;
       const meshComp = entity.getComponent(MeshComponent)!;
       meshComp.mesh.position.set(pos.x, pos.y, pos.z);

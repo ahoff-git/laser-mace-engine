@@ -5,15 +5,15 @@ export declare class Position extends Component<Position> {
     z: number;
     static schema: {
         x: {
-            type: import("ecsy").NumberPropType;
+            type: any;
             default: number;
         };
         y: {
-            type: import("ecsy").NumberPropType;
+            type: any;
             default: number;
         };
         z: {
-            type: import("ecsy").NumberPropType;
+            type: any;
             default: number;
         };
     };

@@ -4,7 +4,7 @@ export declare class MeshComponent extends Component<MeshComponent> {
     mesh: Mesh;
     static schema: {
         mesh: {
-            type: import("ecsy").RefPropType<any>;
+            type: any;
         };
     };
 }

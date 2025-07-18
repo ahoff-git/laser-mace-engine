@@ -4,7 +4,7 @@ export declare class Collider extends Component<Collider> {
     radius: number;
     static schema: {
         radius: {
-            type: import("ecsy").NumberPropType;
+            type: any;
             default: number;
         };
     };
