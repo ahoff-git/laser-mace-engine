@@ -2,20 +2,26 @@ import { System, Entity } from "ecsy";
 import RAPIER from "@dimforge/rapier3d-compat";
 import { Position } from "../components/Position";
 import { Velocity } from "../components/Velocity";
+import { RapierSync, DefaultRapierSync } from "../utils/RapierSync";
 
 export interface PhysicsSystemConfig {
   gravity?: { x: number; y: number; z: number };
+  syncer?: RapierSync;
 }
 
 export class PhysicsSystem extends System {
   private rapier: any;
   private physicsWorld: any;
   private bodies = new Map<Entity, any>();
+  private syncer: RapierSync = new DefaultRapierSync();
 
   async init(attributes?: PhysicsSystemConfig): Promise<void> {
     this.rapier = await RAPIER.init();
     const gravity = attributes?.gravity ?? { x: 0, y: -9.81, z: 0 };
     this.physicsWorld = new this.rapier.World(gravity);
+    if (attributes?.syncer) {
+      this.syncer = attributes.syncer;
+    }
   }
 
   execute(_delta: number): void {
@@ -33,26 +39,21 @@ export class PhysicsSystem extends System {
       });
     }
 
-    // update bodies with velocity from components
+    // update bodies with data from components
     this.queries.movers.results.forEach((entity: Entity) => {
-      const vel = entity.getComponent(Velocity)!;
       const body = this.bodies.get(entity);
-      if (body && body.setLinvel) {
-        body.setLinvel({ x: vel.x, y: vel.y, z: vel.z }, true);
+      if (body) {
+        this.syncer.toRapier(entity, body);
       }
     });
 
     this.physicsWorld.step();
 
-    // sync positions back to components
+    // sync physics results back to components
     this.queries.movers.results.forEach((entity: Entity) => {
       const body = this.bodies.get(entity);
-      if (body && body.translation) {
-        const t = body.translation();
-        const pos = entity.getMutableComponent(Position)!;
-        pos.x = t.x;
-        pos.y = t.y;
-        pos.z = t.z;
+      if (body) {
+        this.syncer.fromRapier(entity, body);
       }
     });
   }

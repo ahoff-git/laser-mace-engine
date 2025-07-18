@@ -2,15 +2,20 @@ import { System } from "ecsy";
 import RAPIER from "@dimforge/rapier3d-compat";
 import { Position } from "../components/Position";
 import { Velocity } from "../components/Velocity";
+import { DefaultRapierSync } from "../utils/RapierSync";
 export class PhysicsSystem extends System {
     constructor() {
         super(...arguments);
         this.bodies = new Map();
+        this.syncer = new DefaultRapierSync();
     }
     async init(attributes) {
         this.rapier = await RAPIER.init();
         const gravity = attributes?.gravity ?? { x: 0, y: -9.81, z: 0 };
         this.physicsWorld = new this.rapier.World(gravity);
+        if (attributes?.syncer) {
+            this.syncer = attributes.syncer;
+        }
     }
     execute(_delta) {
         // create bodies for newly added entities
@@ -22,24 +27,19 @@ export class PhysicsSystem extends System {
                 this.bodies.set(entity, body);
             });
         }
-        // update bodies with velocity from components
+        // update bodies with data from components
         this.queries.movers.results.forEach((entity) => {
-            const vel = entity.getComponent(Velocity);
             const body = this.bodies.get(entity);
-            if (body && body.setLinvel) {
-                body.setLinvel({ x: vel.x, y: vel.y, z: vel.z }, true);
+            if (body) {
+                this.syncer.toRapier(entity, body);
             }
         });
         this.physicsWorld.step();
-        // sync positions back to components
+        // sync physics results back to components
         this.queries.movers.results.forEach((entity) => {
             const body = this.bodies.get(entity);
-            if (body && body.translation) {
-                const t = body.translation();
-                const pos = entity.getMutableComponent(Position);
-                pos.x = t.x;
-                pos.y = t.y;
-                pos.z = t.z;
+            if (body) {
+                this.syncer.fromRapier(entity, body);
             }
         });
     }

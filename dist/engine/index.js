@@ -5,3 +5,4 @@ export * from "./components/Mesh";
 export * from "./systems/MoveSystem";
 export * from "./systems/RenderSystem";
 export * from "./systems/PhysicsSystem";
+export * from "./utils/RapierSync";
