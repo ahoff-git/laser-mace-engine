@@ -3,6 +3,18 @@ import { Position } from '../components/Position';
 import { Velocity } from '../components/Velocity';
 import { Collider } from '../components/Collider';
 import { Immovable } from '../components/Immovable';
+// Cache the Rapier module across HMR/StrictMode to avoid multiple WASM instances
+const RAP_GLOBAL_KEY = '__LM_RAPIER_MODULE__';
+async function loadRapierModule() {
+    const g = globalThis;
+    if (g[RAP_GLOBAL_KEY])
+        return g[RAP_GLOBAL_KEY];
+    const modNs = await import('@dimforge/rapier3d-compat');
+    const mod = modNs?.default ?? modNs;
+    await mod.init({});
+    g[RAP_GLOBAL_KEY] = mod;
+    return mod;
+}
 export class RapierSystem extends System {
     constructor() {
         super(...arguments);
@@ -19,10 +31,7 @@ export class RapierSystem extends System {
         const gravity = attrs?.gravity ?? { x: 0, y: 0, z: 0 };
         this.onCollision = attrs?.onCollision;
         this.pendingBounds = attrs?.bounds;
-        import('@dimforge/rapier3d-compat').then(async (RAPIER) => {
-            const mod = RAPIER?.default ?? RAPIER;
-            // Pass options object to avoid deprecation warnings
-            await mod.init({});
+        loadRapierModule().then((mod) => {
             this.rapier = mod;
             this.world = new mod.World(gravity);
             this.eventQueue = new mod.EventQueue(true);

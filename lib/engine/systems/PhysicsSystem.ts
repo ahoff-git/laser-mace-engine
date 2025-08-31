@@ -1,9 +1,20 @@
 import { System, Entity } from "ecsy";
-import RAPIER from "@dimforge/rapier3d-compat";
 import { Position } from "../components/Position";
 import { Velocity } from "../components/Velocity";
 import { Collider } from "../components/Collider";
 import { RapierSync, DefaultRapierSync } from "../utils/RapierSync";
+
+// Cache the Rapier module across HMR/StrictMode to avoid multiple WASM instances
+const RAP_GLOBAL_KEY_PS = '__LM_RAPIER_MODULE__';
+async function loadRapierModulePS(): Promise<any> {
+  const g: any = (globalThis as any);
+  if (g[RAP_GLOBAL_KEY_PS]) return g[RAP_GLOBAL_KEY_PS];
+  const modNs: any = await import('@dimforge/rapier3d-compat');
+  const mod: any = modNs?.default ?? modNs;
+  await mod.init({});
+  g[RAP_GLOBAL_KEY_PS] = mod;
+  return mod;
+}
 
 export interface PhysicsSystemConfig {
   gravity?: { x: number; y: number; z: number };
@@ -17,7 +28,7 @@ export class PhysicsSystem extends System {
   private syncer: RapierSync = new DefaultRapierSync();
 
   async init(attributes?: PhysicsSystemConfig): Promise<void> {
-    this.rapier = await RAPIER.init();
+    this.rapier = await loadRapierModulePS();
     const gravity = attributes?.gravity ?? { x: 0, y: -9.81, z: 0 };
     this.physicsWorld = new this.rapier.World(gravity);
     if (attributes?.syncer) {

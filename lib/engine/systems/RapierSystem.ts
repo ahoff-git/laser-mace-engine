@@ -14,6 +14,18 @@ export interface RapierSystemConfig {
   bounds?: Bounds;
 }
 
+// Cache the Rapier module across HMR/StrictMode to avoid multiple WASM instances
+const RAP_GLOBAL_KEY = '__LM_RAPIER_MODULE__';
+async function loadRapierModule(): Promise<any> {
+  const g: any = (globalThis as any);
+  if (g[RAP_GLOBAL_KEY]) return g[RAP_GLOBAL_KEY];
+  const modNs: any = await import('@dimforge/rapier3d-compat');
+  const mod: any = modNs?.default ?? modNs;
+  await mod.init({});
+  g[RAP_GLOBAL_KEY] = mod;
+  return mod;
+}
+
 export class RapierSystem extends System<RapierSystemConfig> {
   rapier: typeof import('@dimforge/rapier3d-compat') | null = null;
   world: RAPIERType.World | null = null;
@@ -30,10 +42,7 @@ export class RapierSystem extends System<RapierSystemConfig> {
     const gravity = attrs?.gravity ?? { x: 0, y: 0, z: 0 };
     this.onCollision = attrs?.onCollision;
     this.pendingBounds = attrs?.bounds;
-    import('@dimforge/rapier3d-compat').then(async (RAPIER) => {
-      const mod: any = (RAPIER as any)?.default ?? (RAPIER as any);
-      // Pass options object to avoid deprecation warnings
-      await mod.init({});
+    loadRapierModule().then((mod) => {
       this.rapier = mod;
       this.world = new mod.World(gravity);
       this.eventQueue = new mod.EventQueue(true);
