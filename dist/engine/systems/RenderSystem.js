@@ -3,6 +3,10 @@ import { Scene, PerspectiveCamera, WebGLRenderer } from "three";
 import { Position } from "../components/Position";
 import { MeshComponent } from "../components/Mesh";
 export class RenderSystem extends System {
+    constructor() {
+        super(...arguments);
+        this.lastPosAt = new Map();
+    }
     init(attributes) {
         const canvas = attributes?.canvas;
         this.scene = new Scene();
@@ -17,7 +21,12 @@ export class RenderSystem extends System {
         this.queries.renderables.results.forEach((entity) => {
             const pos = entity.getComponent(Position);
             const meshComp = entity.getComponent(MeshComponent);
-            meshComp.mesh.position.set(pos.x, pos.y, pos.z);
+            const last = this.lastPosAt.get(entity.id) ?? -1;
+            // Always set once (no last) or when position changed per timestamp
+            if (last < (pos.updatedAt ?? 0)) {
+                meshComp.mesh.position.set(pos.x, pos.y, pos.z);
+                this.lastPosAt.set(entity.id, pos.updatedAt ?? 0);
+            }
             if (!this.scene.children.includes(meshComp.mesh)) {
                 this.scene.add(meshComp.mesh);
             }

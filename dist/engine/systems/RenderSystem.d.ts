@@ -6,6 +6,7 @@ export declare class RenderSystem extends System {
     private scene;
     private camera;
     private renderer;
+    private lastPosAt;
     init(attributes?: RenderSystemConfig): void;
     execute(): void;
 }

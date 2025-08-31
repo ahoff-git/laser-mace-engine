@@ -3,6 +3,7 @@ import { Position } from '../components/Position';
 import { Velocity } from '../components/Velocity';
 import { Collider } from '../components/Collider';
 import { Immovable } from '../components/Immovable';
+import { nowMs, massFromSize } from '../utils/common';
 // Cache the Rapier module across HMR/StrictMode to avoid multiple WASM instances
 const RAP_GLOBAL_KEY = '__LM_RAPIER_MODULE__';
 async function loadRapierModule() {
@@ -27,11 +28,18 @@ export class RapierSystem extends System {
         this.eventQueue = null;
         this.pendingAdds = [];
         this.pendingRemoves = [];
+        this.accumulator = 0;
+        this.fixedDelta = 1 / 60;
+        this.maxSubSteps = 5;
     }
     init(attrs) {
         const gravity = attrs?.gravity ?? { x: 0, y: 0, z: 0 };
         this.onCollision = attrs?.onCollision;
         this.pendingBounds = attrs?.bounds;
+        if (attrs?.fixedDelta)
+            this.fixedDelta = attrs.fixedDelta;
+        if (attrs?.maxSubSteps)
+            this.maxSubSteps = attrs.maxSubSteps;
         loadRapierModule().then((mod) => {
             this.rapier = mod;
             this.world = new mod.World(gravity);
@@ -78,14 +86,19 @@ export class RapierSystem extends System {
                 }
             }
         }
-        // step physics
-        try {
-            this.world.timestep = delta;
-            this.world.step(this.eventQueue ?? undefined);
-        }
-        catch (e) {
-            // If Rapier WASM isn't ready or a bad body slipped in, skip this frame
-            return;
+        // step physics using a fixed timestep accumulator
+        this.accumulator += delta;
+        let steps = 0;
+        while (this.accumulator >= this.fixedDelta && steps < this.maxSubSteps) {
+            try {
+                this.world.timestep = this.fixedDelta;
+                this.world.step(this.eventQueue ?? undefined);
+            }
+            catch (_e) {
+                break; // if WASM not ready or invalid state, bail this frame
+            }
+            this.accumulator -= this.fixedDelta;
+            steps++;
         }
         // Collision events disabled while stabilizing WASM usage in dev.
         // sync components from bodies
@@ -101,12 +114,17 @@ export class RapierSystem extends System {
                 }
                 const t = body.translation();
                 const v = body.linvel();
-                pos.x = t.x;
-                pos.y = t.y;
-                pos.z = t.z;
+                // Only flag timestamp when values actually change
+                if (pos.x !== t.x || pos.y !== t.y || pos.z !== t.z) {
+                    pos.x = t.x;
+                    pos.y = t.y;
+                    pos.z = t.z;
+                    pos.updatedAt = nowMs();
+                }
                 vel.x = v.x;
                 vel.y = v.y;
                 vel.z = v.z;
+                vel.updatedAt = nowMs();
             }
             catch (_err) {
                 // If the body became invalid for any reason, try to rebuild it next tick
@@ -131,7 +149,7 @@ export class RapierSystem extends System {
         const size = collider ? (collider.size ?? 1) : 1;
         if (!isFixed) {
             // Prevent extreme masses that could destabilize the simulation
-            const mass = Math.max(0.001, Math.min(1000, size * size * size));
+            const mass = massFromSize(size);
             if (typeof desc.setAdditionalMass === 'function') {
                 desc.setAdditionalMass(mass);
             }

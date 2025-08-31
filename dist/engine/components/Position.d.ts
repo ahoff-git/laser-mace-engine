@@ -3,6 +3,8 @@ export declare class Position extends Component<Position> {
     x: number;
     y: number;
     z: number;
+    /** Monotonic timestamp (ms) of last update */
+    updatedAt: number;
     static schema: {
         x: {
             type: any;
@@ -13,6 +15,10 @@ export declare class Position extends Component<Position> {
             default: number;
         };
         z: {
+            type: any;
+            default: number;
+        };
+        updatedAt: {
             type: any;
             default: number;
         };

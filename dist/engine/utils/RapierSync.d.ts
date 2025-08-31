@@ -14,6 +14,8 @@ export interface RapierSync {
  * translation after the physics step.
  */
 export declare class DefaultRapierSync implements RapierSync {
+    private lastPosToRapierAt;
+    private lastVelToRapierAt;
     toRapier(entity: Entity, body: any): void;
     fromRapier(entity: Entity, body: any): void;
 }

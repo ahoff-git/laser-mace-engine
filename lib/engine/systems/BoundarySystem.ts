@@ -97,6 +97,7 @@ export class BoundarySystem extends System {
           }
           const overlap = rad - dist;
           const adjust = overlap / 2;
+          const now = nowMs();
           posA.x -= nx * adjust;
           posA.y -= ny * adjust;
           posA.z -= nz * adjust;

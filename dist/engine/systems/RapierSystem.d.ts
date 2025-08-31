@@ -11,6 +11,10 @@ export interface RapierSystemConfig {
     onCollision?: (entityA: any, entityB: any, started: boolean) => void;
     /** Optional bounds to create static wall colliders */
     bounds?: Bounds;
+    /** Fixed physics timestep in seconds (default 1/60) */
+    fixedDelta?: number;
+    /** Maximum substeps per execute to avoid spiral-of-death (default 5) */
+    maxSubSteps?: number;
 }
 export declare class RapierSystem extends System<RapierSystemConfig> {
     rapier: typeof import('@dimforge/rapier3d-compat') | null;
@@ -23,6 +27,9 @@ export declare class RapierSystem extends System<RapierSystemConfig> {
     private pendingBounds?;
     private pendingAdds;
     private pendingRemoves;
+    private accumulator;
+    private fixedDelta;
+    private maxSubSteps;
     init(attrs?: RapierSystemConfig): void;
     execute(delta: number): void;
     private addBody;

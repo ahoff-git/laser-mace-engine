@@ -2,6 +2,7 @@ import { System } from "ecsy";
 import { Position } from "../components/Position";
 import { Velocity } from "../components/Velocity";
 import { Collider } from "../components/Collider";
+import { colliderRadius, nowMs } from "../utils/common";
 export class BoundarySystem extends System {
     constructor() {
         super(...arguments);
@@ -22,30 +23,37 @@ export class BoundarySystem extends System {
             const pos = entity.getMutableComponent(Position);
             const vel = entity.getMutableComponent(Velocity);
             const col = entity.getComponent(Collider);
-            const r = col ? (typeof col.radius === 'number' && col.radius > 0 ? col.radius : (col.size ? col.size / 2 : 0)) : 0;
+            const r = colliderRadius(col);
+            const now = nowMs();
             if (pos.x - r < this.bounds.min.x) {
                 pos.x = this.bounds.min.x + r;
                 vel.x *= -1;
+                pos.updatedAt = now;
             }
             else if (pos.x + r > this.bounds.max.x) {
                 pos.x = this.bounds.max.x - r;
                 vel.x *= -1;
+                pos.updatedAt = now;
             }
             if (pos.y - r < this.bounds.min.y) {
                 pos.y = this.bounds.min.y + r;
                 vel.y *= -1;
+                pos.updatedAt = now;
             }
             else if (pos.y + r > this.bounds.max.y) {
                 pos.y = this.bounds.max.y - r;
                 vel.y *= -1;
+                pos.updatedAt = now;
             }
             if (pos.z - r < this.bounds.min.z) {
                 pos.z = this.bounds.min.z + r;
                 vel.z *= -1;
+                pos.updatedAt = now;
             }
             else if (pos.z + r > this.bounds.max.z) {
                 pos.z = this.bounds.max.z - r;
                 vel.z *= -1;
+                pos.updatedAt = now;
             }
         }
         // handle simple elastic collisions between movers
@@ -59,8 +67,8 @@ export class BoundarySystem extends System {
                 const velB = b.getMutableComponent(Velocity);
                 const colA = a.getComponent(Collider);
                 const colB = b.getComponent(Collider);
-                const rA = colA ? (typeof colA.radius === 'number' && colA.radius > 0 ? colA.radius : (colA.size ? colA.size / 2 : 0)) : 0;
-                const rB = colB ? (typeof colB.radius === 'number' && colB.radius > 0 ? colB.radius : (colB.size ? colB.size / 2 : 0)) : 0;
+                const rA = colliderRadius(colA);
+                const rB = colliderRadius(colB);
                 const dx = posB.x - posA.x;
                 const dy = posB.y - posA.y;
                 const dz = posB.z - posA.z;
@@ -86,12 +94,15 @@ export class BoundarySystem extends System {
                     }
                     const overlap = rad - dist;
                     const adjust = overlap / 2;
+                    const now = nowMs();
                     posA.x -= nx * adjust;
                     posA.y -= ny * adjust;
                     posA.z -= nz * adjust;
+                    posA.updatedAt = now;
                     posB.x += nx * adjust;
                     posB.y += ny * adjust;
                     posB.z += nz * adjust;
+                    posB.updatedAt = now;
                 }
             }
         }
