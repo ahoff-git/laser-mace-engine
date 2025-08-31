@@ -11,6 +11,7 @@ export class RenderSystem extends System {
   private scene!: Scene;
   private camera!: PerspectiveCamera;
   private renderer!: WebGLRenderer;
+  private lastPosAt: Map<number, number> = new Map();
 
   init(attributes?: RenderSystemConfig): void {
     const canvas = attributes?.canvas;
@@ -25,9 +26,14 @@ export class RenderSystem extends System {
 
   execute(): void {
     this.queries.renderables.results.forEach((entity: any) => {
-      const pos = entity.getComponent(Position)!;
+      const pos = entity.getComponent(Position)! as any;
       const meshComp = entity.getComponent(MeshComponent)!;
-      meshComp.mesh.position.set(pos.x, pos.y, pos.z);
+      const last = this.lastPosAt.get(entity.id) ?? -1;
+      // Always set once (no last) or when position changed per timestamp
+      if (last < (pos.updatedAt ?? 0)) {
+        meshComp.mesh.position.set(pos.x, pos.y, pos.z);
+        this.lastPosAt.set(entity.id, pos.updatedAt ?? 0);
+      }
       if (!this.scene.children.includes(meshComp.mesh)) {
         this.scene.add(meshComp.mesh);
       }

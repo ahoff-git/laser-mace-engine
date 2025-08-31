@@ -5,6 +5,7 @@ import { Collider } from '../components/Collider';
 import { Immovable } from '../components/Immovable';
 import type * as RAPIERType from '@dimforge/rapier3d-compat';
 import { Bounds } from '../types';
+import { nowMs, massFromSize } from '../utils/common';
 
 export interface RapierSystemConfig {
   gravity?: { x: number; y: number; z: number };
@@ -12,6 +13,10 @@ export interface RapierSystemConfig {
   onCollision?: (entityA: any, entityB: any, started: boolean) => void;
   /** Optional bounds to create static wall colliders */
   bounds?: Bounds;
+  /** Fixed physics timestep in seconds (default 1/60) */
+  fixedDelta?: number;
+  /** Maximum substeps per execute to avoid spiral-of-death (default 5) */
+  maxSubSteps?: number;
 }
 
 // Cache the Rapier module across HMR/StrictMode to avoid multiple WASM instances
@@ -38,11 +43,16 @@ export class RapierSystem extends System<RapierSystemConfig> {
   private pendingBounds?: Bounds;
   private pendingAdds: any[] = [];
   private pendingRemoves: any[] = [];
+  private accumulator = 0;
+  private fixedDelta = 1 / 60;
+  private maxSubSteps = 5;
 
   init(attrs?: RapierSystemConfig): void {
     const gravity = attrs?.gravity ?? { x: 0, y: 0, z: 0 };
     this.onCollision = attrs?.onCollision;
     this.pendingBounds = attrs?.bounds;
+    if (attrs?.fixedDelta) this.fixedDelta = attrs.fixedDelta;
+    if (attrs?.maxSubSteps) this.maxSubSteps = attrs.maxSubSteps;
     loadRapierModule().then((mod) => {
       this.rapier = mod;
       this.world = new mod.World(gravity);
@@ -83,13 +93,18 @@ export class RapierSystem extends System<RapierSystemConfig> {
       }
     }
 
-    // step physics
-    try {
-      (this.world as any).timestep = delta;
-      (this.world as any).step(this.eventQueue ?? undefined);
-    } catch (e) {
-      // If Rapier WASM isn't ready or a bad body slipped in, skip this frame
-      return;
+    // step physics using a fixed timestep accumulator
+    this.accumulator += delta;
+    let steps = 0;
+    while (this.accumulator >= this.fixedDelta && steps < this.maxSubSteps) {
+      try {
+        (this.world as any).timestep = this.fixedDelta;
+        (this.world as any).step(this.eventQueue ?? undefined);
+      } catch (_e) {
+        break; // if WASM not ready or invalid state, bail this frame
+      }
+      this.accumulator -= this.fixedDelta;
+      steps++;
     }
 
     // Collision events disabled while stabilizing WASM usage in dev.
@@ -98,20 +113,25 @@ export class RapierSystem extends System<RapierSystemConfig> {
     for (const entity of this.queries.movers.results) {
       const body = this.bodyMap.get(entity.id);
       if (!body) continue;
-      const pos = entity.getMutableComponent(Position)!;
-      const vel = entity.getMutableComponent(Velocity)!;
+      const pos = entity.getMutableComponent(Position)! as any;
+      const vel = entity.getMutableComponent(Velocity)! as any;
       try {
         if (typeof body.translation !== 'function' || typeof body.linvel !== 'function') {
           continue;
         }
         const t = body.translation();
         const v = body.linvel();
-        pos.x = t.x;
-        pos.y = t.y;
-        pos.z = t.z;
+        // Only flag timestamp when values actually change
+        if (pos.x !== t.x || pos.y !== t.y || pos.z !== t.z) {
+          pos.x = t.x;
+          pos.y = t.y;
+          pos.z = t.z;
+          pos.updatedAt = nowMs();
+        }
         vel.x = v.x;
         vel.y = v.y;
         vel.z = v.z;
+        vel.updatedAt = nowMs();
       } catch (_err) {
         // If the body became invalid for any reason, try to rebuild it next tick
         this.removeBody(entity);
@@ -137,7 +157,7 @@ export class RapierSystem extends System<RapierSystemConfig> {
     const size = collider ? ((collider as any).size ?? 1) : 1;
     if (!isFixed) {
       // Prevent extreme masses that could destabilize the simulation
-      const mass = Math.max(0.001, Math.min(1000, size * size * size));
+      const mass = massFromSize(size);
       if (typeof desc.setAdditionalMass === 'function') {
         desc.setAdditionalMass(mass);
       }
