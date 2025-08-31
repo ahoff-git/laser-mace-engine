@@ -21,6 +21,8 @@ export declare class RapierSystem extends System<RapierSystemConfig> {
     private eventQueue;
     private onCollision?;
     private pendingBounds?;
+    private pendingAdds;
+    private pendingRemoves;
     init(attrs?: RapierSystemConfig): void;
     execute(delta: number): void;
     private addBody;
