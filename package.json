@@ -1,6 +1,6 @@
 {
   "name": "laser-mace-engine",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "",
   "main": "dist/engine/index.js",
   "types": "dist/engine/index.d.ts",

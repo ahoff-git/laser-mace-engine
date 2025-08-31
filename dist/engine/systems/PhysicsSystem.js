@@ -11,7 +11,7 @@ async function loadRapierModulePS() {
         return g[RAP_GLOBAL_KEY_PS];
     const modNs = await import('@dimforge/rapier3d-compat');
     const mod = modNs?.default ?? modNs;
-    await mod.init({});
+    await mod.init();
     g[RAP_GLOBAL_KEY_PS] = mod;
     return mod;
 }

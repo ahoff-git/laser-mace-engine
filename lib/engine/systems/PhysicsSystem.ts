@@ -11,7 +11,7 @@ async function loadRapierModulePS(): Promise<any> {
   if (g[RAP_GLOBAL_KEY_PS]) return g[RAP_GLOBAL_KEY_PS];
   const modNs: any = await import('@dimforge/rapier3d-compat');
   const mod: any = modNs?.default ?? modNs;
-  await mod.init({});
+  await mod.init();
   g[RAP_GLOBAL_KEY_PS] = mod;
   return mod;
 }

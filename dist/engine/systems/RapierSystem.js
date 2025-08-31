@@ -11,7 +11,8 @@ async function loadRapierModule() {
         return g[RAP_GLOBAL_KEY];
     const modNs = await import('@dimforge/rapier3d-compat');
     const mod = modNs?.default ?? modNs;
-    await mod.init({});
+    // Call without deprecated params to avoid warnings across versions
+    await mod.init();
     g[RAP_GLOBAL_KEY] = mod;
     return mod;
 }
