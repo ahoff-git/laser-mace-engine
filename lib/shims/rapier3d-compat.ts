@@ -42,6 +42,11 @@ export class World {
   removeRigidBody(_body: any): void {}
 }
 
+// Types used by `import type * as RAPIERType from '@dimforge/rapier3d-compat'`
+export type RigidBody = ReturnType<World['createRigidBody']>;
+export type Collider = ReturnType<World['createCollider']>;
+export type RapierWorld = World;
+
 const DefaultExport = {
   async init(): Promise<any> { return DefaultExport; },
   World,

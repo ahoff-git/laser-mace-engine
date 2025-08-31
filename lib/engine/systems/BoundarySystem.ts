@@ -2,11 +2,7 @@ import { System } from "ecsy";
 import { Position } from "../components/Position";
 import { Velocity } from "../components/Velocity";
 import { Collider } from "../components/Collider";
-
-export interface Bounds {
-  min: { x: number; y: number; z: number };
-  max: { x: number; y: number; z: number };
-}
+import { Bounds } from "../types";
 
 export interface BoundarySystemConfig {
   bounds?: Bounds;

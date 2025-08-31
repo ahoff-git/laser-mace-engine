@@ -4,11 +4,7 @@ import { Velocity } from '../components/Velocity';
 import { Collider } from '../components/Collider';
 import { Immovable } from '../components/Immovable';
 import type * as RAPIERType from '@dimforge/rapier3d-compat';
-
-export interface Bounds {
-  min: { x: number; y: number; z: number };
-  max: { x: number; y: number; z: number };
-}
+import { Bounds } from '../types';
 
 export interface RapierSystemConfig {
   gravity?: { x: number; y: number; z: number };
@@ -33,10 +29,11 @@ export class RapierSystem extends System<RapierSystemConfig> {
     this.onCollision = attrs?.onCollision;
     this.pendingBounds = attrs?.bounds;
     import('@dimforge/rapier3d-compat').then(async (RAPIER) => {
-      await RAPIER.init();
-      this.rapier = RAPIER as any;
-      this.world = new (RAPIER as any).World(gravity);
-      this.eventQueue = new (RAPIER as any).EventQueue(true);
+      const mod: any = (RAPIER as any)?.default ?? (RAPIER as any);
+      await mod.init();
+      this.rapier = mod;
+      this.world = new mod.World(gravity);
+      this.eventQueue = new mod.EventQueue(true);
       if (this.pendingBounds) {
         this.createBoundaryColliders(this.pendingBounds);
         this.pendingBounds = undefined;
@@ -187,4 +184,3 @@ RapierSystem.queries = {
     },
   },
 };
-

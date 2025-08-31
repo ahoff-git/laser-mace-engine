@@ -1,16 +1,5 @@
 import { System } from "ecsy";
-export interface Bounds {
-    min: {
-        x: number;
-        y: number;
-        z: number;
-    };
-    max: {
-        x: number;
-        y: number;
-        z: number;
-    };
-}
+import { Bounds } from "../types";
 export interface BoundarySystemConfig {
     bounds?: Bounds;
 }

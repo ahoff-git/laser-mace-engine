@@ -14,3 +14,4 @@ export * from "./utils/RapierSync";
 export * from "./utils/entityFactory";
 export * from "./utils/generateBoundaryLandmarks";
 export * from "./view/cameraController";
+export * from "./types";

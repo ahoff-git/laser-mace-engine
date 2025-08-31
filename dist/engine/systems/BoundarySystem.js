@@ -22,7 +22,7 @@ export class BoundarySystem extends System {
             const pos = entity.getMutableComponent(Position);
             const vel = entity.getMutableComponent(Velocity);
             const col = entity.getComponent(Collider);
-            const r = col ? col.radius : 0;
+            const r = col ? (typeof col.radius === 'number' && col.radius > 0 ? col.radius : (col.size ? col.size / 2 : 0)) : 0;
             if (pos.x - r < this.bounds.min.x) {
                 pos.x = this.bounds.min.x + r;
                 vel.x *= -1;
@@ -59,8 +59,8 @@ export class BoundarySystem extends System {
                 const velB = b.getMutableComponent(Velocity);
                 const colA = a.getComponent(Collider);
                 const colB = b.getComponent(Collider);
-                const rA = colA ? colA.radius : 0;
-                const rB = colB ? colB.radius : 0;
+                const rA = colA ? (typeof colA.radius === 'number' && colA.radius > 0 ? colA.radius : (colA.size ? colA.size / 2 : 0)) : 0;
+                const rB = colB ? (typeof colB.radius === 'number' && colB.radius > 0 ? colB.radius : (colB.size ? colB.size / 2 : 0)) : 0;
                 const dx = posB.x - posA.x;
                 const dy = posB.y - posA.y;
                 const dz = posB.z - posA.z;

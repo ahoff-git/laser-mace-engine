@@ -14,7 +14,16 @@ export class PerspectiveCamera {
         this.aspect = aspect;
         this.near = near;
         this.far = far;
-        this.position = { z: 0 };
+        this.position = {
+            x: 0,
+            y: 0,
+            z: 0,
+            multiplyScalar: (s) => {
+                this.position.x *= s;
+                this.position.y *= s;
+                this.position.z *= s;
+            },
+        };
     }
 }
 export class WebGLRenderer {
@@ -25,7 +34,7 @@ export class WebGLRenderer {
     render(_scene, _camera) { }
 }
 export class Mesh {
-    constructor() {
+    constructor(_geometry, _material) {
         this.position = {
             x: 0,
             y: 0,
@@ -36,5 +45,17 @@ export class Mesh {
                 this.position.z = z;
             },
         };
+    }
+}
+export class BoxGeometry {
+    constructor(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+}
+export class MeshBasicMaterial {
+    constructor(options) {
+        this.options = options;
     }
 }

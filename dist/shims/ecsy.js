@@ -1,5 +1,7 @@
 export class Component {
 }
+export class TagComponent {
+}
 export const Types = {
     Number: 'number',
     Ref: 'ref',
@@ -9,5 +11,5 @@ export class System {
 }
 export class World {
     registerComponent(_c) { return this; }
-    registerSystem(_s) { return this; }
+    registerSystem(_s, _attrs) { return this; }
 }

@@ -9,16 +9,18 @@ export const Types = {
   Ref: 'ref' as any,
 };
 
-export class System {
+export class System<T = any> {
   world: any;
   static queries: any;
   queries: any;
+  init?(attributes?: T): void | Promise<void>;
   execute(_delta: number): void {}
+  stop?(): void;
 }
 
 export class World {
   registerComponent(_c: any): this { return this; }
-  registerSystem(_s: any): this { return this; }
+  registerSystem(_s: any, _attrs?: any): this { return this; }
 }
 
 export type Entity = any;
