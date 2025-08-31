@@ -63,8 +63,13 @@ export class RapierSystem extends System<RapierSystemConfig> {
     }
 
     // step physics
-    (this.world as any).timestep = delta;
-    (this.world as any).step(this.eventQueue ?? undefined);
+    try {
+      (this.world as any).timestep = delta;
+      (this.world as any).step(this.eventQueue ?? undefined);
+    } catch (e) {
+      // If Rapier WASM isn't ready or a bad body slipped in, skip this frame
+      return;
+    }
 
     if (this.eventQueue) {
       this.eventQueue.drainCollisionEvents((h1, h2, started) => {
@@ -80,14 +85,23 @@ export class RapierSystem extends System<RapierSystemConfig> {
       if (!body) continue;
       const pos = entity.getMutableComponent(Position)!;
       const vel = entity.getMutableComponent(Velocity)!;
-      const t = body.translation();
-      const v = body.linvel();
-      pos.x = t.x;
-      pos.y = t.y;
-      pos.z = t.z;
-      vel.x = v.x;
-      vel.y = v.y;
-      vel.z = v.z;
+      try {
+        if (typeof body.translation !== 'function' || typeof body.linvel !== 'function') {
+          continue;
+        }
+        const t = body.translation();
+        const v = body.linvel();
+        pos.x = t.x;
+        pos.y = t.y;
+        pos.z = t.z;
+        vel.x = v.x;
+        vel.y = v.y;
+        vel.z = v.z;
+      } catch (_err) {
+        // If the body became invalid for any reason, try to rebuild it next tick
+        this.removeBody(entity);
+        this.addBody(entity);
+      }
     }
   }
 
@@ -107,8 +121,11 @@ export class RapierSystem extends System<RapierSystemConfig> {
     }
     const size = collider ? ((collider as any).size ?? 1) : 1;
     if (!isFixed) {
-      const mass = size * size * size;
-      desc.setAdditionalMass(mass);
+      // Prevent extreme masses that could destabilize the simulation
+      const mass = Math.max(0.001, Math.min(1000, size * size * size));
+      if (typeof desc.setAdditionalMass === 'function') {
+        desc.setAdditionalMass(mass);
+      }
     }
     const body = (this.world as any).createRigidBody(desc);
 
