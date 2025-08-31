@@ -23,6 +23,8 @@ export class RapierSystem extends System<RapierSystemConfig> {
   private eventQueue: RAPIERType.EventQueue | null = null;
   private onCollision?: (entityA: any, entityB: any, started: boolean) => void;
   private pendingBounds?: Bounds;
+  private pendingAdds: any[] = [];
+  private pendingRemoves: any[] = [];
 
   init(attrs?: RapierSystemConfig): void {
     const gravity = attrs?.gravity ?? { x: 0, y: 0, z: 0 };
@@ -30,7 +32,8 @@ export class RapierSystem extends System<RapierSystemConfig> {
     this.pendingBounds = attrs?.bounds;
     import('@dimforge/rapier3d-compat').then(async (RAPIER) => {
       const mod: any = (RAPIER as any)?.default ?? (RAPIER as any);
-      await mod.init();
+      // Pass options object to avoid deprecation warnings
+      await mod.init({});
       this.rapier = mod;
       this.world = new mod.World(gravity);
       this.eventQueue = new mod.EventQueue(true);
@@ -47,19 +50,26 @@ export class RapierSystem extends System<RapierSystemConfig> {
     const added = (this.queries.movers.added as any[]) ?? [];
     const removed = (this.queries.movers.removed as any[]) ?? [];
 
-    for (const entity of added) {
-      this.addBody(entity);
+    // Defer mutations to the physics world to a controlled phase
+    for (const e of added) this.pendingAdds.push(e);
+    for (const e of this.queries.movers.results) {
+      if (!this.bodyMap.has(e.id)) this.pendingAdds.push(e);
     }
+    for (const e of removed) this.pendingRemoves.push(e);
 
-    // Ensure any movers that existed before world init get bodies once ready
-    for (const entity of this.queries.movers.results) {
-      if (!this.bodyMap.has(entity.id)) {
-        this.addBody(entity);
+    // Apply pending removals first, then additions
+    if (this.pendingRemoves.length) {
+      const todo = this.pendingRemoves.splice(0);
+      for (const e of todo) {
+        try { this.removeBody(e); } catch (_) { /* retry next frame */ }
       }
     }
 
-    for (const entity of removed) {
-      this.removeBody(entity);
+    if (this.pendingAdds.length) {
+      const todo = this.pendingAdds.splice(0);
+      for (const e of todo) {
+        try { this.addBody(e); } catch (_) { /* retry next frame */ this.pendingAdds.push(e); }
+      }
     }
 
     // step physics
