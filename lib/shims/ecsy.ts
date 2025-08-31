@@ -2,6 +2,8 @@ export class Component<T = any> {
   static schema: any;
 }
 
+export class TagComponent {}
+
 export const Types = {
   Number: 'number' as any,
   Ref: 'ref' as any,
