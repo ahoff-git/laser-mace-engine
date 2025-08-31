@@ -21,8 +21,8 @@ async function loadRapierModule(): Promise<any> {
   if (g[RAP_GLOBAL_KEY]) return g[RAP_GLOBAL_KEY];
   const modNs: any = await import('@dimforge/rapier3d-compat');
   const mod: any = modNs?.default ?? modNs;
-  // Call without deprecated params to avoid warnings across versions
-  await mod.init();
+  // Use the object-form to satisfy newer Rapier init API
+  await mod.init({});
   g[RAP_GLOBAL_KEY] = mod;
   return mod;
 }
@@ -46,7 +46,8 @@ export class RapierSystem extends System<RapierSystemConfig> {
     loadRapierModule().then((mod) => {
       this.rapier = mod;
       this.world = new mod.World(gravity);
-      this.eventQueue = new mod.EventQueue(true);
+      // Temporarily disable EventQueue to avoid WASM panics observed in dev
+      this.eventQueue = null as any;
       if (this.pendingBounds) {
         this.createBoundaryColliders(this.pendingBounds);
         this.pendingBounds = undefined;
@@ -91,13 +92,7 @@ export class RapierSystem extends System<RapierSystemConfig> {
       return;
     }
 
-    if (this.eventQueue) {
-      this.eventQueue.drainCollisionEvents((h1, h2, started) => {
-        const e1 = this.colliderMap.get(h1);
-        const e2 = this.colliderMap.get(h2);
-        if (e1 && e2) this.onCollision?.(e1, e2, started);
-      });
-    }
+    // Collision events disabled while stabilizing WASM usage in dev.
 
     // sync components from bodies
     for (const entity of this.queries.movers.results) {
