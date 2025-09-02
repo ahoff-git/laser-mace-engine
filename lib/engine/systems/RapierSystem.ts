@@ -83,7 +83,16 @@ export class RapierSystem extends System<RapierSystemConfig> {
     }
     for (const e of removed) this.pendingRemoves.push(e);
 
-    // Apply pending removals first, then additions
+    // Proactively detect any stale entities and queue their removal before stepping
+    if (this.colliderMap.size) {
+      for (const [_handle, e] of this.colliderMap) {
+        if (!e || (typeof e.alive === 'boolean' && e.alive === false)) {
+          this.pendingRemoves.push(e);
+        }
+      }
+    }
+
+    // Apply pending removals first, then additions (before stepping)
     if (this.pendingRemoves.length) {
       const todo = this.pendingRemoves.splice(0);
       for (const e of todo) {
@@ -114,7 +123,7 @@ export class RapierSystem extends System<RapierSystemConfig> {
 
     // Collision events disabled while stabilizing WASM usage in dev.
 
-    // sync components from bodies
+    // sync components from bodies (read-only; no Rapier mutations)
     for (const entity of this.queries.movers.results) {
       const body = this.bodyMap.get(entity.id);
       if (!body) continue;
@@ -138,24 +147,9 @@ export class RapierSystem extends System<RapierSystemConfig> {
         vel.z = v.z;
         vel.updatedAt = nowMs();
       } catch (_err) {
-        // If the body became invalid for any reason, try to rebuild it next tick
-        this.removeBody(entity);
-        this.addBody(entity);
-      }
-    }
-
-    // Safety net: ensure colliders/bodies are removed for entities
-    // that have been destroyed without triggering query 'removed'.
-    if (this.colliderMap.size) {
-      const stale: any[] = [];
-      for (const [_handle, e] of this.colliderMap) {
-        // If entity reference is missing or marked not alive, clean it up
-        if (!e || (typeof e.alive === 'boolean' && e.alive === false)) {
-          stale.push(e);
-        }
-      }
-      for (const e of stale) {
-        try { this.removeBody(e); } catch { /* ignore */ }
+        // If the body became invalid for any reason, schedule a rebuild next tick
+        this.pendingRemoves.push(entity);
+        this.pendingAdds.push(entity);
       }
     }
   }
