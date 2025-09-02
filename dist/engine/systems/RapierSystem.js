@@ -132,6 +132,23 @@ export class RapierSystem extends System {
                 this.addBody(entity);
             }
         }
+        // Safety net: ensure colliders/bodies are removed for entities
+        // that have been destroyed without triggering query 'removed'.
+        if (this.colliderMap.size) {
+            const stale = [];
+            for (const [_handle, e] of this.colliderMap) {
+                // If entity reference is missing or marked not alive, clean it up
+                if (!e || (typeof e.alive === 'boolean' && e.alive === false)) {
+                    stale.push(e);
+                }
+            }
+            for (const e of stale) {
+                try {
+                    this.removeBody(e);
+                }
+                catch { /* ignore */ }
+            }
+        }
     }
     addBody(entity) {
         if (!this.world || !this.rapier)
