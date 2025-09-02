@@ -1,6 +1,7 @@
 export class EventQueue {
     constructor(_autoDrain) { }
     drainCollisionEvents(_cb) { }
+    free() { }
 }
 export const ActiveEvents = {
     COLLISION_EVENTS: 1,
@@ -36,7 +37,10 @@ export class World {
             setActiveEvents(_ev) { },
         };
     }
+    getCollider(_handle) { return { handle: _handle }; }
+    removeCollider(_collider, _wakeBody) { }
     removeRigidBody(_body) { }
+    free() { }
 }
 const DefaultExport = {
     async init() { return DefaultExport; },

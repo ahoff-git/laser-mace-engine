@@ -5,6 +5,13 @@ export class Scene {
       this.children.push(obj);
     }
   }
+  remove(obj: any): void {
+    const i = this.children.indexOf(obj);
+    if (i >= 0) this.children.splice(i, 1);
+  }
+  clear(): void {
+    this.children = [];
+  }
 }
 
 export class PerspectiveCamera {
@@ -25,6 +32,7 @@ export class WebGLRenderer {
   constructor(public options: any = {}) {}
   setSize(_w: number, _h: number): void {}
   render(_scene: any, _camera: any): void {}
+  dispose(): void {}
 }
 
 export class Mesh {

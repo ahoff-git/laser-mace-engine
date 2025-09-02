@@ -7,6 +7,14 @@ export class Scene {
             this.children.push(obj);
         }
     }
+    remove(obj) {
+        const i = this.children.indexOf(obj);
+        if (i >= 0)
+            this.children.splice(i, 1);
+    }
+    clear() {
+        this.children = [];
+    }
 }
 export class PerspectiveCamera {
     constructor(fov, aspect, near, far) {
@@ -32,6 +40,7 @@ export class WebGLRenderer {
     }
     setSize(_w, _h) { }
     render(_scene, _camera) { }
+    dispose() { }
 }
 export class Mesh {
     constructor(_geometry, _material) {

@@ -1,6 +1,8 @@
 export declare class Scene {
     children: any[];
     add(obj: any): void;
+    remove(obj: any): void;
+    clear(): void;
 }
 export declare class PerspectiveCamera {
     fov: number;
@@ -20,6 +22,7 @@ export declare class WebGLRenderer {
     constructor(options?: any);
     setSize(_w: number, _h: number): void;
     render(_scene: any, _camera: any): void;
+    dispose(): void;
 }
 export declare class Mesh {
     constructor(_geometry?: any, _material?: any);

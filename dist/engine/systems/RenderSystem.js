@@ -7,6 +7,10 @@ export class RenderSystem extends System {
         super(...arguments);
         this.lastPosAt = new Map();
     }
+    /** Current number of mesh objects in the scene. */
+    objectCount() {
+        return this.scene.children.length;
+    }
     init(attributes) {
         const canvas = attributes?.canvas;
         this.scene = new Scene();
@@ -17,7 +21,16 @@ export class RenderSystem extends System {
             this.renderer.setSize(canvas.width, canvas.height);
         }
     }
+    handleRemovals(entities) {
+        for (const e of entities) {
+            const meshComp = e.getComponent(MeshComponent, true);
+            if (meshComp)
+                this.scene.remove(meshComp.mesh);
+            this.lastPosAt.delete(e.id);
+        }
+    }
     execute() {
+        this.handleRemovals(this.queries.renderables.removed ?? []);
         this.queries.renderables.results.forEach((entity) => {
             const pos = entity.getComponent(Position);
             const meshComp = entity.getComponent(MeshComponent);
@@ -33,7 +46,15 @@ export class RenderSystem extends System {
         });
         this.renderer.render(this.scene, this.camera);
     }
+    dispose() {
+        this.scene.clear();
+        this.renderer.dispose();
+        this.lastPosAt.clear();
+    }
 }
 RenderSystem.queries = {
-    renderables: { components: [Position, MeshComponent] },
+    renderables: {
+        components: [Position, MeshComponent],
+        listen: { removed: true },
+    },
 };
