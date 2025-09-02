@@ -1,6 +1,7 @@
 export declare class EventQueue {
     constructor(_autoDrain: boolean);
     drainCollisionEvents(_cb: (h1: number, h2: number, started: boolean) => void): void;
+    free(): void;
 }
 export declare const ActiveEvents: {
     COLLISION_EVENTS: number;
@@ -25,7 +26,10 @@ export declare class World {
     step(_queue?: EventQueue): void;
     createRigidBody(_desc: RigidBodyDesc): any;
     createCollider(_desc: ColliderDesc, _body: any): any;
+    getCollider(_handle: number): any;
+    removeCollider(_collider: any, _wakeBody: boolean): void;
     removeRigidBody(_body: any): void;
+    free(): void;
 }
 export type RigidBody = ReturnType<World['createRigidBody']>;
 export type Collider = ReturnType<World['createCollider']>;

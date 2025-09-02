@@ -1,6 +1,7 @@
 export class EventQueue {
   constructor(_autoDrain: boolean) {}
   drainCollisionEvents(_cb: (h1: number, h2: number, started: boolean) => void): void {}
+  free(): void {}
 }
 
 export const ActiveEvents = {
@@ -39,7 +40,10 @@ export class World {
       setActiveEvents(_ev: number) {},
     } as any;
   }
+  getCollider(_handle: number): any { return { handle: _handle }; }
+  removeCollider(_collider: any, _wakeBody: boolean): void {}
   removeRigidBody(_body: any): void {}
+  free(): void {}
 }
 
 // Types used by `import type * as RAPIERType from '@dimforge/rapier3d-compat'`

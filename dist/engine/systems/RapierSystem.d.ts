@@ -30,10 +30,13 @@ export declare class RapierSystem extends System<RapierSystemConfig> {
     private accumulator;
     private fixedDelta;
     private maxSubSteps;
+    /** Current number of physics bodies tracked by the system. */
+    bodyCount(): number;
     init(attrs?: RapierSystemConfig): void;
     execute(delta: number): void;
     private addBody;
     private createBoundaryColliders;
     /** Remove the Rapier rigid body and collider for the given entity. */
     removeBody(entity: any): void;
+    dispose(): void;
 }
