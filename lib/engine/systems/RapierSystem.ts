@@ -228,22 +228,26 @@ export class RapierSystem extends System<RapierSystemConfig> {
 
   /** Remove the Rapier rigid body and collider for the given entity. */
   removeBody(entity: any): void {
-    if (!this.world) return;
+    if (!this.world || !entity || typeof entity.id !== 'number') return;
 
     const body = this.bodyMap.get(entity.id);
     const handle = this.entityColliderMap.get(entity.id);
 
     if (handle !== undefined) {
-      const collider = (this.world as any).getCollider(handle);
-      if (collider) {
-        (this.world as any).removeCollider(collider, true);
-      }
+      try {
+        const collider = (this.world as any).getCollider?.(handle);
+        if (collider && (this.world as any).removeCollider) {
+          (this.world as any).removeCollider(collider, true);
+        }
+      } catch { /* ignore WASM traps; cleanup maps below */ }
       this.colliderMap.delete(handle);
       this.entityColliderMap.delete(entity.id);
     }
 
     if (body) {
-      (this.world as any).removeRigidBody(body);
+      try {
+        (this.world as any).removeRigidBody?.(body);
+      } catch { /* ignore */ }
       this.bodyMap.delete(entity.id);
     }
   }

@@ -209,20 +209,26 @@ export class RapierSystem extends System {
     }
     /** Remove the Rapier rigid body and collider for the given entity. */
     removeBody(entity) {
-        if (!this.world)
+        if (!this.world || !entity || typeof entity.id !== 'number')
             return;
         const body = this.bodyMap.get(entity.id);
         const handle = this.entityColliderMap.get(entity.id);
         if (handle !== undefined) {
-            const collider = this.world.getCollider(handle);
-            if (collider) {
-                this.world.removeCollider(collider, true);
+            try {
+                const collider = this.world.getCollider?.(handle);
+                if (collider && this.world.removeCollider) {
+                    this.world.removeCollider(collider, true);
+                }
             }
+            catch { /* ignore WASM traps; cleanup maps below */ }
             this.colliderMap.delete(handle);
             this.entityColliderMap.delete(entity.id);
         }
         if (body) {
-            this.world.removeRigidBody(body);
+            try {
+                this.world.removeRigidBody?.(body);
+            }
+            catch { /* ignore */ }
             this.bodyMap.delete(entity.id);
         }
     }
