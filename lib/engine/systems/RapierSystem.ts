@@ -47,6 +47,11 @@ export class RapierSystem extends System<RapierSystemConfig> {
   private fixedDelta = 1 / 60;
   private maxSubSteps = 5;
 
+  /** Current number of physics bodies tracked by the system. */
+  bodyCount(): number {
+    return this.bodyMap.size;
+  }
+
   init(attrs?: RapierSystemConfig): void {
     const gravity = attrs?.gravity ?? { x: 0, y: 0, z: 0 };
     this.onCollision = attrs?.onCollision;
@@ -247,6 +252,18 @@ export class RapierSystem extends System<RapierSystemConfig> {
       (this.world as any).removeRigidBody(body);
       this.bodyMap.delete(entity.id);
     }
+  }
+
+  dispose(): void {
+    this.eventQueue?.free();
+    this.eventQueue = null;
+    this.world?.free();
+    this.world = null;
+    this.bodyMap.clear();
+    this.colliderMap.clear();
+    this.entityColliderMap.clear();
+    this.pendingAdds = [];
+    this.pendingRemoves = [];
   }
 }
 

@@ -1,5 +1,6 @@
 import { World as ECSYWorld } from "ecsy";
 import { CommandQueueManager, CommandQueueOptions } from "./utils/CommandQueueManager";
+import type { EngineCommand } from "./utils/commands";
 
 export interface WorldConfig {
   components?: any[];
@@ -8,11 +9,11 @@ export interface WorldConfig {
 }
 
 export class EngineWorld extends ECSYWorld {
-  commandQueue: CommandQueueManager;
+  commandQueue: CommandQueueManager<EngineCommand>;
 
-  constructor(commandQueueOptions:CommandQueueOptions) {
+  constructor(commandQueueOptions: CommandQueueOptions) {
     super();
-    this.commandQueue = new CommandQueueManager(commandQueueOptions);
+    this.commandQueue = new CommandQueueManager<EngineCommand>(commandQueueOptions);
   }
 }
 
