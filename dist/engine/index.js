@@ -4,6 +4,7 @@ export * from "./components/Velocity";
 export * from "./components/Mesh";
 export * from "./components/Collider";
 export * from "./components/Immovable";
+export * from "./components/BodyType";
 export * from "./components/Destroy";
 export * from "./systems/MoveSystem";
 export * from "./systems/RenderSystem";

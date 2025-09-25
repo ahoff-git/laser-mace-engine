@@ -2,7 +2,7 @@ import { System } from 'ecsy';
 import { Position } from '../components/Position';
 import { Velocity } from '../components/Velocity';
 import { Collider } from '../components/Collider';
-import { Immovable } from '../components/Immovable';
+import { BodyType, BodyTypeValue, DEFAULT_BODY_TYPE, normalizeBodyType } from '../components/BodyType';
 import type * as RAPIERType from '@dimforge/rapier3d-compat';
 import { Bounds } from '../types';
 import { nowMs, massFromSize } from '../utils/common';
@@ -162,14 +162,14 @@ export class RapierSystem extends System<RapierSystemConfig> {
     const collider = entity.getComponent(Collider);
     const R = this.rapier as any;
 
-    const isFixed = entity.hasComponent(Immovable);
-    const desc = (isFixed ? R.RigidBodyDesc.fixed() : R.RigidBodyDesc.dynamic())
+    const bodyType = this.consumeBodyType(entity);
+    const desc = this.createBodyDescriptor(R, bodyType)
       .setTranslation(pos.x, pos.y, pos.z);
-    if (!isFixed) {
+    if (bodyType === 'dynamic') {
       desc.setLinvel(vel.x, vel.y, vel.z);
     }
     const size = collider ? ((collider as any).size ?? 1) : 1;
-    if (!isFixed) {
+    if (bodyType === 'dynamic') {
       // Prevent extreme masses that could destabilize the simulation
       const mass = massFromSize(size);
       if (typeof desc.setAdditionalMass === 'function') {
@@ -188,6 +188,26 @@ export class RapierSystem extends System<RapierSystemConfig> {
     this.bodyMap.set(entity.id, body);
     this.colliderMap.set(col.handle, entity);
     this.entityColliderMap.set(entity.id, col.handle);
+  }
+
+  private consumeBodyType(entity: any): BodyTypeValue {
+    const explicit = entity.getComponent(BodyType);
+    if (!explicit) return DEFAULT_BODY_TYPE;
+    const value = normalizeBodyType(explicit.value);
+    entity.removeComponent(BodyType, true);
+    return value;
+  }
+
+  private createBodyDescriptor(R: any, bodyType: BodyTypeValue): any {
+    switch (bodyType) {
+      case 'fixed':
+        return R.RigidBodyDesc.fixed();
+      case 'kinematic':
+        return R.RigidBodyDesc.kinematicPositionBased();
+      case 'dynamic':
+      default:
+        return R.RigidBodyDesc.dynamic();
+    }
   }
 
   private createBoundaryColliders(bounds: Bounds): void {

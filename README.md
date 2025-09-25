@@ -57,11 +57,18 @@ requestAnimationFrame(loop);
 
 ## API overview
 
-- **Components**: `Position`, `Velocity`, `MeshComponent`, `Collider`, `Immovable`
+- **Components**: `Position`, `Velocity`, `MeshComponent`, `Collider`, `BodyType`, `Immovable`
 - **Systems**: `MoveSystem`, `RenderSystem`, `RapierSystem`, `BoundarySystem`, `PhysicsSystem`, `WrapSystem`
 - **Utilities**: `createCubeEntity`, `generateBoundaryLandmarks`, `cameraController`, `RapierSync`
 
 See the [lib/engine](lib/engine) directory for full source and additional utilities.
+
+### Updating from Immovable to BodyType
+
+`RapierSystem` now requires the `BodyType` component to decide how a rigid body should be created.
+To keep an entity fixed in place, add `BodyType` with `{ value: 'fixed' }` instead of relying on
+`Immovable`. `Immovable` is still available for UI logic, but it no longer affects the physics
+integration.
 
 ## Building from source
 
