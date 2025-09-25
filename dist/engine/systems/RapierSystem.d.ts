@@ -35,6 +35,8 @@ export declare class RapierSystem extends System<RapierSystemConfig> {
     init(attrs?: RapierSystemConfig): void;
     execute(delta: number): void;
     private addBody;
+    private consumeBodyType;
+    private createBodyDescriptor;
     private createBoundaryColliders;
     /** Remove the Rapier rigid body and collider for the given entity. */
     removeBody(entity: any): void;

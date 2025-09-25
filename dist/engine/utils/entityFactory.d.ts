@@ -1,3 +1,4 @@
+import { BodyTypeValue } from '../components/BodyType';
 export interface CubeOptions {
     world: any;
     position?: {
@@ -13,7 +14,7 @@ export interface CubeOptions {
     color?: number;
     size?: number;
     friction?: number;
-    immovable?: boolean;
+    bodyType?: BodyTypeValue;
     /** If true, mark the entity so UI can treat it as stationary */
     stationary?: boolean;
 }
